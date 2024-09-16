@@ -45,7 +45,8 @@ public class ShipController : MonoBehaviour
 
     private void ConfigureCursor()
     {
-        Cursor.lockState = CursorLockMode.Confined;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     private void HandleLook()
@@ -60,12 +61,13 @@ public class ShipController : MonoBehaviour
 
         rollInput = Mathf.Lerp(rollInput, Input.GetAxisRaw("Roll") + Input.GetAxis("Right Stick Roll"), rollAcceleration * Time.deltaTime);
 
-        float rotationX = (-mouseDistance.y + joystickLookY) * lookRateSpeed * Time.deltaTime;
+        float rotationX = (mouseDistance.y + joystickLookY) * lookRateSpeed * Time.deltaTime;
         float rotationY = (mouseDistance.x + joystickLookX) * lookRateSpeed * Time.deltaTime;
         float rotationZ = rollInput * rollSpeed * Time.deltaTime;
 
-        transform.Rotate(rotationX, rotationY, rotationZ, Space.Self);
+        transform.Rotate(-rotationX, rotationY, rotationZ, Space.Self);
     }
+
 
     private void HandleMovement()
     {

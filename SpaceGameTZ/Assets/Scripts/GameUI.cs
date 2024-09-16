@@ -1,13 +1,14 @@
-using System.Collections;
-using TMPro;
 using UnityEngine;
+using TMPro;
+using System.Collections;
 
 public class GameUI : MonoBehaviour
 {
-    public static GameUI Instance; 
+    public static GameUI Instance;
 
     [SerializeField] private TextMeshProUGUI healthText;
     [SerializeField] private TextMeshProUGUI damageText;
+    [SerializeField] private TextMeshProUGUI coinText;
 
     private void Awake()
     {
@@ -23,25 +24,47 @@ public class GameUI : MonoBehaviour
 
     private void Start()
     {
-        UpdateHealthUI(100, 100);
-        damageText.gameObject.SetActive(false); 
+        if (gameObject.activeInHierarchy)
+        {
+            UpdateHealthUI(100, 100);
+            damageText.gameObject.SetActive(false);
+            UpdateCoinUI(CoinManager.Instance.GetCoinCount());
+        }
     }
 
     public void UpdateHealthUI(float currentHealth, float maxHealth)
     {
-        healthText.text = $"Health: {currentHealth}/{maxHealth}";
+        if (gameObject.activeInHierarchy && healthText.gameObject.activeInHierarchy)
+        {
+            healthText.text = $"Health: {currentHealth}/{maxHealth}";
+        }
     }
 
     public void ShowDamage(float damage)
     {
-        damageText.gameObject.SetActive(true);
-        damageText.text = $"-{damage}% health";
-        StartCoroutine(HideDamageText());
+        if (gameObject.activeInHierarchy && damageText.gameObject.activeInHierarchy)
+        {
+            damageText.gameObject.SetActive(true);
+            damageText.text = $"-{damage}% health";
+            StartCoroutine(HideDamageText());
+        }
     }
 
     private IEnumerator HideDamageText()
     {
-        yield return new WaitForSeconds(2f); 
-        damageText.gameObject.SetActive(false); 
+        yield return new WaitForSeconds(2f);
+
+        if (gameObject.activeInHierarchy && damageText.gameObject.activeInHierarchy)
+        {
+            damageText.gameObject.SetActive(false);
+        }
+    }
+
+    public void UpdateCoinUI(int coinCount)
+    {
+        if (gameObject.activeInHierarchy && coinText.gameObject.activeInHierarchy)
+        {
+            coinText.text = $"Coins: {coinCount}";
+        }
     }
 }

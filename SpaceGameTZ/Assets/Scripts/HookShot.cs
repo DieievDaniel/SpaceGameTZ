@@ -1,8 +1,9 @@
 using UnityEngine;
+using System.Collections;
 
 public class HookShot : MonoBehaviour
 {
-    [SerializeField] private Transform originalPosition; 
+    [SerializeField] private Transform originalPosition;
 
     private GameObject player;
     private GameObject coin;
@@ -13,6 +14,7 @@ public class HookShot : MonoBehaviour
     bool wasCoinHooked;
 
     float hookDistance;
+    private bool isDeactivating;
 
     Rigidbody rb;
 
@@ -24,6 +26,7 @@ public class HookShot : MonoBehaviour
         wasCoinHooked = false;
         hookDistance = 0;
         rb = GetComponent<Rigidbody>();
+        isDeactivating = false;
     }
 
     private void Update()
@@ -31,12 +34,13 @@ public class HookShot : MonoBehaviour
         lineRenderer.SetPosition(0, originalPosition.position);
         lineRenderer.SetPosition(1, transform.position);
 
-        if (Input.GetMouseButtonDown(1) && !isHooking && !wasCoinHooked)
+        if ((Input.GetMouseButtonDown(1) || Input.GetButtonDown("Fire2")) && !isHooking && !wasCoinHooked)
         {
             StartHooking();
         }
+
         ReturnHook();
-        BringCoinTowardsPlayer();
+        BringCoinTowardsOriginalPosition();
     }
 
     private void StartHooking()
@@ -50,31 +54,46 @@ public class HookShot : MonoBehaviour
     {
         if (isHooking)
         {
-            hookDistance = Vector3.Distance(transform.position, originalPosition.position); 
+            hookDistance = Vector3.Distance(transform.position, originalPosition.position);
             if (hookDistance > Constants.MAX_HOOK_DISTANCE || wasCoinHooked)
             {
                 rb.isKinematic = true;
-                transform.position = originalPosition.position; 
+                transform.position = originalPosition.position;
                 isHooking = false;
             }
         }
     }
 
-    private void BringCoinTowardsPlayer()
+    private void BringCoinTowardsOriginalPosition()
     {
-        if (wasCoinHooked)
+        if (wasCoinHooked && coin != null)
         {
-            Vector3 finalPosition = new Vector3(originalPosition.position.x, coin.transform.position.y, originalPosition.position.z + Constants.ENEMY_Z_OFFSET);
-            coin.transform.position = Vector3.MoveTowards(coin.transform.position, finalPosition, Constants.MAX_HOOK_DISTANCE);
-            wasCoinHooked = false;
+            Vector3 targetPosition = originalPosition.position;
+            coin.transform.position = Vector3.MoveTowards(coin.transform.position, targetPosition, Constants.HOOK_SPEED * Time.deltaTime);
+
+            if (Vector3.Distance(coin.transform.position, targetPosition) < 0.1f && !isDeactivating)
+            {
+                StartCoroutine(DeactivateCoinAfterDelay());
+            }
         }
+    }
+
+    private IEnumerator DeactivateCoinAfterDelay()
+    {
+        isDeactivating = true;
+        yield return new WaitForSeconds(0.5f);
+        CoinManager.Instance.AddCoins(1);
+        coin.SetActive(false);
+        wasCoinHooked = false;
+        coin = null;
+        isDeactivating = false;
     }
 
     private void OnTriggerEnter(Collider collider)
     {
-        if (collider.gameObject.tag.Equals("Coin"))
+        if (collider.gameObject.CompareTag("Coin"))
         {
-            wasCoinHooked =true;
+            wasCoinHooked = true;
             coin = collider.gameObject;
         }
     }
